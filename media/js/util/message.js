@@ -15,6 +15,20 @@ if (typeof exports !== 'undefined') {
     // Message Text Formatting
     //
 
+    var markdown = window.markdownit({
+        html: false,
+        linkify: true
+    });
+
+    var link_open = markdown.renderer.rules.link_open;
+
+    markdown.renderer.rules.link_open = function (tokens, idx) {
+        if (!tokens[idx].target) {
+            tokens[idx].target = '_blank';
+        }
+
+        return link_open(tokens, idx);
+    };
 
     function getBaseUrl() {
         var parts = window.location.pathname.split('/');
@@ -74,23 +88,21 @@ if (typeof exports !== 'undefined') {
         });
     }
 
-    function links(text) {
-        var imagePattern = /^\s*((https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;'"!()]*[-A-Z0-9+&@#\/%=~_|][.](jpe?g|png|gif))\s*$/i,
-        linkPattern = /((https?|ftp):\/\/[-A-Z0-9+&*@#\/%?=~_|!:,.;'"!()]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    function embeds(text) {
+        text = uploads(text);
 
-        if (imagePattern.test(text)) {
-            return text.replace(imagePattern, function(url) {
-                var uri = encodeURI(_.unescape(url));
-                return '<a class="thumbnail" href="' + uri +
-                       '" target="_blank"><img src="' + uri +
-                       '" alt="Pasted Image" /></a>';
-            });
-        } else {
-            return text.replace(linkPattern, function(url) {
-                var uri = encodeURI(_.unescape(url));
-                return '<a href="' + uri + '" target="_blank">' + url + '</a>';
-            });
+        var imagePattern = /^\s*((https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;'"!()]*[-A-Z0-9+&@#\/%=~_|][.](jpe?g|png|gif))\s*$/i;
+
+        if (!text.match(imagePattern)) {
+            return false;
         }
+
+        return text.replace(imagePattern, function(url) {
+            var uri = encodeURI(_.unescape(url));
+            return '<a class="thumbnail" href="' + uri +
+                   '" target="_blank"><img src="' + uri +
+                   '" alt="Pasted Image" /></a>';
+        });
     }
 
     function emotes(text, data) {
@@ -121,13 +133,20 @@ if (typeof exports !== 'undefined') {
         return text;
     }
 
+    function markdowns(text) {
+        return markdown.render(text);
+    }
+
     exports.format = function(text, data) {
+        var embed = embeds(text);
+        if (embed) {
+            return embed;
+        }
+
         var pipeline = [
-            trim,
+            markdowns,
             mentions,
             roomLinks,
-            uploads,
-            links,
             emotes,
             replacements
         ];
