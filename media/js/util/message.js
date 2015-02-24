@@ -15,14 +15,15 @@ if (typeof exports !== 'undefined') {
     // Message Text Formatting
     //
 
-    var markdown = window.markdownit({
+    var markdownit = window.markdownit({
         html: false,
-        linkify: true
+        linkify: true,
+        breaks: true
     });
 
-    var link_open = markdown.renderer.rules.link_open;
+    var link_open = markdownit.renderer.rules.link_open;
 
-    markdown.renderer.rules.link_open = function (tokens, idx) {
+    markdownit.renderer.rules.link_open = function (tokens, idx) {
         if (!tokens[idx].target) {
             tokens[idx].target = '_blank';
         }
@@ -133,8 +134,8 @@ if (typeof exports !== 'undefined') {
         return text;
     }
 
-    function markdowns(text) {
-        return markdown.render(text);
+    function markdown(text) {
+        return markdownit.render(text);
     }
 
     exports.format = function(text, data) {
@@ -144,7 +145,7 @@ if (typeof exports !== 'undefined') {
         }
 
         var pipeline = [
-            markdowns,
+            markdown,
             mentions,
             roomLinks,
             emotes,
