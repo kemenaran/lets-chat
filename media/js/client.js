@@ -415,8 +415,9 @@
         //
         // Socket
         //
-        this.socket = io.connect(null, {
-            reconnect: true
+        this.socket = io.connect(undefined, {
+            reconnect: true,
+            path: window.location.pathname + 'socket.io'
         });
         this.socket.on('connect', function() {
             that.getUser();
